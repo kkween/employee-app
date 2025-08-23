@@ -1,0 +1,17 @@
+*.log
+*.env
+*.json
+*.yml
+*.yaml
+*.md
+*.txt
+*.csv
+*.ts
+*.js
+*.jsx
+*.tsx
+*.css
+*.scss
+*.html
+*.map
+*.lock
