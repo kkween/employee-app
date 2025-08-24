@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const db = require('./db');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = 5000; // Consistent port usage
@@ -100,8 +101,12 @@ app.delete('/api/employees/:id', async (req, res) => {
 app.post('/api/admin/login', async (req, res) => {
   const { username, password } = req.body;
   try {
-    const [rows] = await db.query('SELECT * FROM admins WHERE username = ?', [username]);
-    if (rows.length === 0 || rows[0].password !== password) {
+    // Hash the incoming password
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+
+    // Query the users table with hashed password
+    const [rows] = await db.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, hashedPassword]);
+    if (rows.length === 0) {
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
     // Set session (in-memory, for demo only)
