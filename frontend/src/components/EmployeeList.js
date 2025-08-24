@@ -1,12 +1,12 @@
-import { Link, useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
 
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
 
 
-const EmployeeList = ({ isAdminLoggedIn, onLogout }) => {
+const EmployeeList = ({ isAdminLoggedIn }) => {
   const [employees, setEmployees] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', position: '' });
@@ -20,9 +20,7 @@ const EmployeeList = ({ isAdminLoggedIn, onLogout }) => {
     }
     axios.get(`${API_BASE_URL}/api/employees`, { withCredentials: true })
       .then(res => setEmployees(res.data))
-      .catch(err => {
-        setError('Failed to fetch employees.');
-      });
+      .catch(err => setError('Failed to fetch employees.'));
   }, [isAdminLoggedIn, navigate]);
 
   const deleteEmployee = (id) => {
