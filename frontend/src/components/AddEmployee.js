@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+// Use environment variable or default to localhost
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+
 const AddEmployee = () => {
   const [form, setForm] = useState({ name: '', email: '', position: '' });
   const navigate = useNavigate();
@@ -13,7 +16,7 @@ const AddEmployee = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     axios
-      .post('http://localhost:5000/api/employees', form)
+      .post(`${API_BASE_URL}/api/employees`, form, { withCredentials: true })
       .then(() => navigate('/'))
       .catch((err) => {
         console.error('Error adding employee:', err);

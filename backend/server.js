@@ -2,25 +2,55 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./db');
 const crypto = require('crypto');
+const session = require('express-session');
 
 const app = express();
-const PORT = 5000; // Consistent port usage
+const PORT = 5000;
 
-let adminSession = null;
-
-// Middleware
-app.use(cors({ origin: 'http://localhost:3000' }));
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://147.182.236.228:3000'],
+  credentials: true
+}));
 app.use(express.json());
+app.use(session({
+  secret: 'your_secret_key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false }
+}));
 
-// Admin authentication middleware
 function requireAdmin(req, res, next) {
-  if (!adminSession) {
+  if (!req.session || !req.session.admin) {
     return res.status(401).json({ error: 'Unauthorized: Admin login required' });
   }
   next();
 }
 
-// GET: Fetch all employees
+// Protect employee routes
+app.use('/api/employees', requireAdmin);
+
+// Admin login/logout routes
+app.post('/api/admin/login', async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+    const [rows] = await db.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, hashedPassword]);
+    if (rows.length === 0) {
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+    req.session.admin = { username };
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/admin/logout', (req, res) => {
+  req.session.destroy();
+  res.json({ success: true });
+});
+
+// Employee routes (these are now protected)
 app.get('/api/employees', async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM employees');
@@ -31,15 +61,11 @@ app.get('/api/employees', async (req, res) => {
   }
 });
 
-// POST: Add a new employee
 app.post('/api/employees', async (req, res) => {
   const { name, email, position = 'Employee' } = req.body;
-
-  // Basic validation0
   if (!name || !email) {
     return res.status(400).json({ error: 'Name and email are required' });
   }
-
   try {
     const [result] = await db.query(
       'INSERT INTO employees (name, email, position) VALUES (?, ?, ?)',
@@ -52,26 +78,20 @@ app.post('/api/employees', async (req, res) => {
   }
 });
 
-// PUT: Update an employee by ID
 app.put('/api/employees/:id', async (req, res) => {
   const { id } = req.params;
   const { name, email, position = 'Employee' } = req.body;
-
-  // Basic validation
   if (!name || !email) {
     return res.status(400).json({ error: 'Name and email are required' });
   }
-
   try {
     const [result] = await db.query(
       'UPDATE employees SET name = ?, email = ?, position = ? WHERE id = ?',
       [name, email, position, id]
     );
-
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Employee not found' });
     }
-
     res.json({ id: parseInt(id), name, email, position });
   } catch (err) {
     console.error('Error updating employee:', err);
@@ -79,17 +99,13 @@ app.put('/api/employees/:id', async (req, res) => {
   }
 });
 
-// DELETE: Delete an employee by ID
 app.delete('/api/employees/:id', async (req, res) => {
   const { id } = req.params;
-
   try {
     const [result] = await db.query('DELETE FROM employees WHERE id = ?', [id]);
-
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Employee not found' });
     }
-
     res.json({ message: 'Employee deleted successfully' });
   } catch (err) {
     console.error('Error deleting employee:', err);
@@ -97,36 +113,6 @@ app.delete('/api/employees/:id', async (req, res) => {
   }
 });
 
-// POST: Admin login endpoint
-app.post('/api/admin/login', async (req, res) => {
-  const { username, password } = req.body;
-  try {
-    // Hash the incoming password
-    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
-
-    // Query the users table with hashed password
-    const [rows] = await db.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, hashedPassword]);
-    if (rows.length === 0) {
-      return res.status(401).json({ success: false, error: 'Invalid credentials' });
-    }
-    // Set session (in-memory, for demo only)
-    adminSession = { username };
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, error: 'Server error' });
-  }
-});
-
-// POST: Admin logout endpoint
-app.post('/api/admin/logout', (req, res) => {
-  adminSession = null;
-  res.json({ success: true });
-});
-
-// Protect employee routes
-app.use('/api/employees', requireAdmin);
-
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on http://0.0.0.0:${PORT}`);
 });

@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+// Use environment variable or default to localhost
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+
 const AdminLogin = ({ onLogin }) => {
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
@@ -16,10 +19,16 @@ const AdminLogin = ({ onLogin }) => {
     e.preventDefault();
     setError('');
     try {
-      const res = await axios.post('http://localhost:5000/api/admin/login', form);
+      const res = await axios.post(
+        `${API_BASE_URL}/api/admin/login`,
+        form,
+        { withCredentials: true }
+      );
       if (res.data.success) {
         onLogin();
         navigate('/'); // Redirect to employee list after login
+      } else {
+        setError('Invalid credentials');
       }
     } catch (err) {
       setError('Invalid credentials');
@@ -71,7 +80,7 @@ const AdminLogin = ({ onLogin }) => {
               style={{
                 minWidth: 70,
                 border: 'none',
-                background: showPassword ? '#2196f3' : '#ff9800', // blue for "Hide", orange for "Show"
+                background: showPassword ? '#2196f3' : '#ff9800',
                 color: '#fff',
                 fontWeight: 500,
                 borderRadius: '0 6px 6px 0',
@@ -79,7 +88,7 @@ const AdminLogin = ({ onLogin }) => {
                 cursor: 'pointer'
               }}
               onMouseOver={e => {
-                e.target.style.background = showPassword ? '#1976d2' : '#fb8c00'; // darker blue or orange on hover
+                e.target.style.background = showPassword ? '#1976d2' : '#fb8c00';
                 e.target.style.color = '#fff';
               }}
               onMouseOut={e => {

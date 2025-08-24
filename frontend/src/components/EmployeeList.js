@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 
-const PAGE_SIZE = 5; // Number of employees per page
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+
 
 const EmployeeList = ({ isAdminLoggedIn, onLogout }) => {
   const [employees, setEmployees] = useState([]);
@@ -16,7 +17,7 @@ const EmployeeList = ({ isAdminLoggedIn, onLogout }) => {
       navigate('/admin/login');
       return;
     }
-    axios.get('http://localhost:5000/api/employees')
+    axios.get(`${API_BASE_URL}/api/employees`, { withCredentials: true })
       .then(res => setEmployees(res.data))
       .catch(err => {
         setError('Failed to fetch employees.');
@@ -24,7 +25,7 @@ const EmployeeList = ({ isAdminLoggedIn, onLogout }) => {
   }, [isAdminLoggedIn, navigate]);
 
   const deleteEmployee = (id) => {
-    axios.delete(`http://localhost:5000/api/employees/${id}`)
+    axios.delete(`${API_BASE_URL}/api/employees/${id}`, { withCredentials: true })
       .then(() => setEmployees(employees.filter(emp => emp.id !== id)));
   };
 
@@ -38,7 +39,7 @@ const EmployeeList = ({ isAdminLoggedIn, onLogout }) => {
       alert('Name and email are required');
       return;
     }
-    const res = await axios.post('http://localhost:5000/api/employees', form);
+    const res = await axios.post(`${API_BASE_URL}/api/employees`, form, { withCredentials: true });
     setEmployees([...employees, res.data]);
     setForm({ name: '', email: '', position: '' });
     setShowForm(false);

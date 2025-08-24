@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 
+// Use environment variable or default to localhost
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+
 const EditEmployee = () => {
   const [form, setForm] = useState({ name: '', email: '', position: '' });
   const [loading, setLoading] = useState(true);
@@ -12,7 +15,7 @@ const EditEmployee = () => {
     const fetchEmployee = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`http://localhost:5000/api/employees/${id}`);
+        const res = await axios.get(`${API_BASE_URL}/api/employees/${id}`);
         setForm({
           name: res.data?.name || '',
           email: res.data?.email || '',
@@ -38,7 +41,7 @@ const EditEmployee = () => {
       return;
     }
     try {
-      await axios.put(`http://localhost:5000/api/employees/${id}`, form);
+      await axios.put(`${API_BASE_URL}/api/employees/${id}`, form, { withCredentials: true });
       alert('Employee updated successfully!');
       navigate('/');
     } catch (err) {
@@ -53,7 +56,6 @@ const EditEmployee = () => {
     return <div className="container mt-5">Loading...</div>;
   }
 
-  // Always show the form, but display error message above it if error exists
   return (
     <div className="container mt-5">
       <h2>Edit Employee</h2>
