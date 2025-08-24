@@ -1,6 +1,7 @@
+import { Link, useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
+
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
 
@@ -83,7 +84,7 @@ const EmployeeList = ({ isAdminLoggedIn, onLogout }) => {
             <table className="table table-bordered">
               <thead>
                 <tr>
-                  <th>#</th> {/* Row number */}
+                  <th>#</th>
                   <th>Name</th>
                   <th>Email</th>
                   <th>Position</th>
