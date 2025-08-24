@@ -14,6 +14,8 @@ function App() {
     navigate('/admin/login');
   };
 
+  const handleLogin = () => setIsAdminLoggedIn(true);
+
   return (
     <div>
       <header
@@ -83,7 +85,7 @@ function App() {
         <Route path="/edit/:id" element={isAdminLoggedIn ? <EditEmployee /> : <Navigate to="/admin/login" replace />} />
         <Route
           path="/admin/login"
-          element={<AdminLogin onLogin={() => setIsAdminLoggedIn(true)} />}
+          element={<AdminLogin onLogin={handleLogin} />}
         />
       </Routes>
     </div>
